@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>えすさん｜ナイトレイン深度4野良配信</title>
+<meta name="description" content="ELDEN RING NIGHTREIGN の深度4を、野良マッチで配信しているえすさんのページです。配信の記録と、作ったツールをまとめています。">
+<!-- リンクカード用 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="えすさん｜ナイトレイン深度4野良配信">
+<meta property="og:description" content="ELDEN RING NIGHTREIGN の深度4を野良で配信しています。戦績・遺物一覧と、配信者向けに作ったツールをまとめています。">
+<meta property="og:url" content="https://esusan.github.io/">
+<meta property="og:image" content="https://esusan.github.io/img/icon.jpg">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<style>
+  /* 配信オーバーレイと同じ色（狼：黒＋銀グレー＋琥珀、線はシアン） */
+  @font-face { font-family: "Teko"; font-weight: 600; font-display: swap; src: url("fonts/Teko-600.woff2") format("woff2"); }
+  @font-face { font-family: "Share Tech Mono"; font-weight: 400; font-display: swap; src: url("fonts/ShareTechMono-400.woff2") format("woff2"); }
+  :root {
+    --bg: #060608;
+    --panel: #101114;
+    --panel-2: #16181c;
+    --line: #262a32;
+    --main: #969faf;
+    --glow: #d7dce6;
+    --cyan: #3ee8f0;
+    --amber: #f2a53a;
+    --text: #ffffff;
+    --text-sub: #c4c8cf;
+    --muted: #8b919b;
+    --ease-out: cubic-bezier(.16, 1, .3, 1);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(38, 42, 50, .9), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Noto Sans JP", "Yu Gothic UI", "Hiragino Sans", sans-serif;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  a { color: var(--cyan); }
+  main { max-width: 1040px; margin: 0 auto; padding: 0 16px 64px; }
+
+  /* 英字の見出しラベル（オーバーレイと同じTeko） */
+  .label {
+    display: inline-block;
+    font-family: "Teko", "Noto Sans JP", sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: .14em;
+    line-height: 1;
+    color: var(--cyan);
+    padding-left: 10px;
+    border-left: 3px solid var(--cyan);
+  }
+
+  /* ヒーロー：立ち絵と名前 */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 32px;
+    align-items: end;
+    padding-top: 40px;
+    min-height: 560px;
+  }
+  .hero-text { padding-bottom: 48px; }
+  .hero h1 {
+    margin: 14px 0 6px;
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: .04em;
+    color: var(--text);
+  }
+  .tagline {
+    margin: 0 0 26px;
+    font-family: "Share Tech Mono", ui-monospace, monospace;
+    font-size: 14px;
+    letter-spacing: .06em;
+    color: var(--main);
+  }
+  .tagline b { color: var(--amber); font-weight: 400; }
+  .nw { white-space: nowrap; }
+  .hero-figure {
+    position: relative;
+    align-self: stretch;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .hero-figure::before {
+    /* 立ち絵の後ろの光 */
+    content: "";
+    position: absolute;
+    inset: 18% 0 0;
+    background: radial-gradient(closest-side, rgba(62, 232, 240, .16), transparent);
+    pointer-events: none;
+  }
+  .hero-figure img {
+    position: relative;
+    display: block;
+    width: auto;
+    height: 560px;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .6));
+  }
+
+  .sns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .sns a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform .2s var(--ease-out), background .2s, border-color .2s;
+  }
+  .sns a:hover { transform: translateY(-2px); }
+  .sns .yt { background: var(--cyan); color: #061214; }
+  .sns .x { background: transparent; color: var(--text); border: 1px solid var(--cyan); }
+  .sns .x:hover { background: rgba(62, 232, 240, .12); }
+  .sns svg { width: 18px; height: 18px; flex: none; }
+
+  /* セクション */
+  section { margin-top: 64px; }
+  section h2 { margin: 12px 0 8px; font-size: 22px; }
+  .section-lead { color: var(--text-sub); margin: 0 0 20px; }
+
+  /* 配信について：普通の文章で */
+  .about-text { max-width: 44em; }
+  .about-text p { margin: 0 0 10px; color: var(--text-sub); }
+
+  /* 作ったもの：カード */
+  .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .cards.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 20px 20px 22px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    text-decoration: none;
+    overflow: hidden;
+    transition: border-color .2s, background .2s, transform .2s var(--ease-out);
+  }
+  .card::before {
+    /* 左のシアンの線（オーバーレイの枠と同じ） */
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--cyan);
+    transform: scaleY(.35);
+    transform-origin: top;
+    transition: transform .3s var(--ease-out);
+  }
+  .card:hover { border-color: #3a404b; background: var(--panel-2); transform: translateY(-2px); }
+  .card:hover::before { transform: scaleY(1); }
+  .card:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  /* 各ページの最初の画面（ファーストビュー）の画像 */
+  .card .shot {
+    display: block;
+    margin: 0 -20px 12px -22px;
+    border-bottom: 1px solid var(--line);
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: #0b0c0e;
+  }
+  .card .shot img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+    transition: transform .4s var(--ease-out);
+  }
+  .card:hover .shot img { transform: scale(1.03); }
+  .card .kind {
+    font-family: "Share Tech Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--main);
+  }
+  .card h3 { margin: 0; font-size: 18px; line-height: 1.4; }
+  .card p { margin: 0; color: var(--text-sub); font-size: 14px; flex: 1; }
+  /* カード全体がリンク。ボタンはその目印（中にbuttonは置けないので見た目だけボタンにする） */
+  .card .go {
+    /* 右下にそろえる（説明文の長さが違っても、横に並ぶカードでボタンの高さがそろう） */
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    background: var(--cyan);
+    color: #061214;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.4;
+    transition: background .2s, box-shadow .2s;
+  }
+  .card:hover .go { background: #7ff2f7; box-shadow: 0 0 0 3px rgba(62, 232, 240, .18); }
+
+  /* 配信とショートの作り方 */
+  .making { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .making-block {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px 22px 22px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--amber);
+  }
+  .making-block .kind {
+    font-family: "Share Tech Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .08em;
+    color: var(--main);
+  }
+  .making-block h3 { margin: 0; font-size: 18px; }
+  .making-block p { margin: 0 0 4px; color: var(--text-sub); font-size: 14px; }
+  .making-block ul { margin: 4px 0 0; padding: 0; list-style: none; flex: 1; }
+  .making-block li {
+    position: relative;
+    padding: 7px 0 7px 18px;
+    font-size: 14px;
+    line-height: 1.7;
+    border-top: 1px dashed var(--line);
+  }
+  .making-block li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 15px;
+    width: 7px;
+    height: 7px;
+    background: var(--cyan);
+    transform: rotate(45deg);
+  }
+  .go-inline {
+    align-self: flex-end;
+    margin-top: 12px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid var(--cyan);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .go-inline:hover { background: rgba(62, 232, 240, .12); }
+  .go-row { align-self: flex-end; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .go-row .go-inline { align-self: auto; }
+
+  footer {
+    margin-top: 72px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 12.5px;
+    line-height: 1.8;
+  }
+  footer p { margin: 6px 0 0; }
+
+  /* スマホ：立ち絵を上に、文字を下に。XやYouTubeから来た人が最初の画面で名前とボタンまで見られる大きさにする */
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; min-height: 0; gap: 0; padding-top: 16px; }
+    .hero-figure { order: -1; }
+    .hero-figure img { height: min(300px, 42vh); }
+    .hero-text { padding-bottom: 0; }
+    .hero h1 { font-size: 42px; margin-top: 10px; }
+    .cards, .cards.three, .making { grid-template-columns: 1fr; }
+    section { margin-top: 48px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .card, .card::before, .sns a, .card .shot img, .card .go { transition: none; }
+    .card:hover .shot img { transform: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="hero-text">
+      <span class="label">PROFILE</span>
+      <h1>えすさん</h1>
+      <p class="tagline"><span class="nw">ELDEN RING NIGHTREIGN</span> ／ <span class="nw"><b>深度4</b>野良配信</span></p>
+      <div class="sns">
+        <a class="yt" href="https://www.youtube.com/@%E3%81%88%E3%81%99%E3%81%95%E3%82%93-0" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3.02 3.02 0 0 0-2.13-2.14C19.51 3.5 12 3.5 12 3.5s-7.51 0-9.37.56A3.02 3.02 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3.02 3.02 0 0 0 2.13 2.14C4.49 20.5 12 20.5 12 20.5s7.51 0 9.37-.56a3.02 3.02 0 0 0 2.13-2.14A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.4 3.6z"/></svg>
+          YouTubeで配信を見る
+        </a>
+        <a class="x" href="https://x.com/u_se_nr" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          X（@u_se_nr）
+        </a>
+      </div>
+    </div>
+    <div class="hero-figure">
+      <picture>
+        <source srcset="img/chara.webp" type="image/webp">
+        <img src="img/chara.png" width="353" height="1100" alt="えすさんの立ち絵。灰色の髪に狼の耳としっぽ、黒いパーカーを着ている">
+      </picture>
+    </div>
+  </header>
+
+  <section aria-labelledby="about-h">
+    <span class="label">ABOUT</span>
+    <h2 id="about-h">配信について</h2>
+    <div class="about-text">
+      <p>深度4を野良マッチで回っています。<br>連勝数を稼ぐことよりも、野良ならではのやりとりやハプニングを楽しんでいます。</p>
+      <p>うまくなりたいので、アドバイスはいつでも歓迎です。</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="records-h">
+    <span class="label">RECORDS</span>
+    <h2 id="records-h">配信の記録</h2>
+    <p class="section-lead">配信での戦績と、使っている遺物の構成をまとめています。</p>
+    <div class="cards">
+      <a class="card" href="https://esusan.github.io/nightreign-stats/">
+        <picture class="shot"><source srcset="img/shot-stats.webp" type="image/webp"><img src="img/shot-stats.jpg" width="640" height="400" alt="" loading="lazy"></picture>
+        <span class="kind">STATS</span>
+        <h3>深度4野良戦績</h3>
+        <p>配信での試合の勝ち負けと連勝の記録です。毎日自動で更新しています。試合ごとに配信アーカイブのその場面へ飛べます。</p>
+        <span class="go">戦績を見る</span>
+      </a>
+      <a class="card" href="https://esusan.github.io/nightreign-relics/">
+        <picture class="shot"><source srcset="img/shot-relics.webp" type="image/webp"><img src="img/shot-relics.jpg" width="640" height="400" alt="" loading="lazy"></picture>
+        <span class="kind">RELICS</span>
+        <h3>遺物一覧</h3>
+        <p>配信で使っている遺物の構成を、キャラ別・ボス別に見られるページです。</p>
+        <span class="go">遺物一覧を見る</span>
+      </a>
+    </div>
+  </section>
+
+  <section aria-labelledby="making-h">
+    <span class="label">BEHIND THE STREAM</span>
+    <h2 id="making-h">配信とショートの作り方</h2>
+    <p class="section-lead">配信画面とショート動画は、手作業を減らして見やすくするために自分で仕組みを作っています。</p>
+    <div class="making">
+      <article class="making-block">
+        <span class="kind">OVERLAY</span>
+        <h3>配信画面を自作</h3>
+        <p>配信に重ねて表示するもの（オーバーレイ）を、一から作っています。色と動きをそろえて、ゲーム画面の邪魔にならないようにしています。</p>
+        <ul>
+          <li>Stream Deckのボタンを押すだけで、オープニング・マッチング画面・ボス表示・勝ちの演出が切り替わる</li>
+          <li>連勝数と最高記録までの進み具合を、リングで表示</li>
+          <li>ボスが決まると警告のカットインが入り、そのキャラとボスに合わせた遺物の構成を自動で表示</li>
+          <li>勝ちを押せば連勝が増えて戦績に残り、戦績ページにも毎日自動で反映</li>
+          <li>配信のタイトルや説明文も自動で作成</li>
+          <li>押し間違いの対策入り。ボスが出たままだとマッチング画面に入れないので、勝敗の押し忘れにも気づける</li>
+          <li>コメントは画面の右端に縦長に表示（side-comment）</li>
+        </ul>
+        <a class="go-inline" href="https://x.com/u_se_nr/status/2117201365273641038" target="_blank" rel="noopener noreferrer">Xで詳しく見る</a>
+      </article>
+      <article class="making-block">
+        <span class="kind">SHORTS</span>
+        <h3>ショート作成を効率化</h3>
+        <p>配信の名場面をショート動画にして、毎日投稿しながら作り方を改善してきました。自分が決めることと、AIやツールに任せることを分けて、全部を手作業でやるより1/20くらいの工数で作れています。</p>
+        <ul>
+          <li>配信アーカイブの時間を指定すると、その場面だけを切り出して、編集ソフトのプロジェクトまで自動で作成</li>
+          <li>レイアウト・文字・背景・サムネイルを共通の形にそろえて、毎回同じ見た目で作れるように</li>
+          <li>一緒に遊んだ野良の方の名前に、自動でぼかしを入れる</li>
+          <li>喋った内容を文字起こしして、字幕として入れる</li>
+          <li>配信画面のオーバーレイは、ショートで切り抜く範囲に入らない位置に配置</li>
+          <li>視聴維持率などのデータを見ながら、作り方を見直す</li>
+        </ul>
+        <div class="go-row">
+          <a class="go-inline" href="https://x.com/u_se_nr/status/2118476306262507990" target="_blank" rel="noopener noreferrer">Xで詳しく見る</a>
+          <a class="go-inline" href="https://www.youtube.com/@%E3%81%88%E3%81%99%E3%81%95%E3%82%93-0/shorts" target="_blank" rel="noopener noreferrer">ショートを見る</a>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="tools-h">
+    <span class="label">TOOLS</span>
+    <h2 id="tools-h">作ったもの</h2>
+    <p class="section-lead">配信で使うために作ったツールを公開しています。どれも配信や動画で自由に使えます。</p>
+    <div class="cards three">
+      <a class="card" href="https://esusan.github.io/nightreign-picker/">
+        <picture class="shot"><source srcset="img/shot-picker.webp" type="image/webp"><img src="img/shot-picker.jpg" width="640" height="400" alt="" loading="lazy"></picture>
+        <span class="kind">NIGHTREIGN ／ OBS</span>
+        <h3>キャラランダムツール</h3>
+        <p>次に出撃するキャラをランダムに抽選するツールです。OBSのブラウザソースとして配信画面にも出せます。</p>
+        <span class="go">使ってみる</span>
+      </a>
+      <a class="card" href="https://esusan.github.io/nightreign-dict/">
+        <picture class="shot"><source srcset="img/shot-dict.webp" type="image/webp"><img src="img/shot-dict.jpg" width="640" height="400" alt="" loading="lazy"></picture>
+        <span class="kind">NIGHTREIGN ／ わんコメ</span>
+        <h3>ナイトレイン読み上げ辞書</h3>
+        <p>ナイトレインの用語を、わんコメの読み上げが正しく読めるようにする辞書です。URLを登録するだけで使えます。</p>
+        <span class="go">設定方法を見る</span>
+      </a>
+      <a class="card" href="https://esusan.github.io/onecomme-side-comment/">
+        <picture class="shot"><source srcset="img/shot-sidecomment.webp" type="image/webp"><img src="img/shot-sidecomment.jpg" width="640" height="400" alt="" loading="lazy"></picture>
+        <span class="kind">わんコメ ／ OBS</span>
+        <h3>side-comment</h3>
+        <p>画面の端に縦長に置く、わんコメ用のコメント表示テンプレートです。見た目を選んでOBSに貼るURLを作れます。</p>
+        <span class="go">使ってみる</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <p>このページと各ツールは、個人が作った非公式のものです。ゲームの開発元・販売元、わんコメ（OneComme）の開発元とは関係ありません。</p>
+    <p>ELDEN RING NIGHTREIGN は各権利者の商標または登録商標です。</p>
+  </footer>
+</main>
+
+<script>
+  // アクセス集計（遺物一覧・キャラランダムツールと同じGoatCounter）。手元で開いたときは送らない
+  (function countView() {
+    if (location.protocol === 'file:' || /(localhost$|^127\.|^\[::1\]$)/.test(location.hostname)) return
+    const q = {
+      p: location.pathname,
+      t: document.title,
+      r: document.referrer.replace(/[?#].*$/, ''),
+      s: screen.width,
+      b: navigator.webdriver ? 153 : 0,
+      rnd: Math.random().toString(36).slice(2),
+    }
+    const url = 'https://esusan.goatcounter.com/count?' + new URLSearchParams(q)
+    if (!(navigator.sendBeacon && navigator.sendBeacon(url))) new Image().src = url
+  })()
+</script>
+</body>
+</html>
